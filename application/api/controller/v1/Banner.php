@@ -8,8 +8,8 @@
 
 namespace app\api\controller\v1;
 
-use app\api\validate\TestValidate;
-use think\Validate;
+use app\api\validate\IDMustBeInpostiveInt;
+
 class Banner
 {
     /**
@@ -20,15 +20,20 @@ class Banner
      */
     public function  getBanner($id){
 
-//        独立验证
-//        验证器
-        $data = [
-            'name'=>'vendor12345',
-            'email' => 'verdorqq.com'
-        ];
-        $validate = new TestValidate();
-        $result = $validate->batch()->check($data);
-
-        var_dump($validate->getError());
+////        独立验证
+////        验证器
+//        $data = [
+//            'id'=> $id
+//        ];
+//        $validate = new IDMustBeInpostiveInt();
+//        $result = $validate->batch()->check($data);
+//
+//        if ($result){
+//            return '校验成功';
+//        }else{
+//
+//        }
+        (new IDMustBeInpostiveInt())->goCheck();
+        $c = 1;
     }
 }
