@@ -8,7 +8,11 @@
 
 namespace app\api\controller\v1;
 
+use app\api\model\Banner as BannerModel;
 use app\api\validate\IDMustBeInpostiveInt;
+use app\lib\exception\BannerMissException;
+use think\Exception;
+use think\exception\ErrorException;
 
 class Banner
 {
@@ -18,22 +22,18 @@ class Banner
      * @Http GET
      * @param $id Banner的id号
      */
-    public function  getBanner($id){
+    public function getBanner($id)
+    {
 
-////        独立验证
-////        验证器
-//        $data = [
-//            'id'=> $id
-//        ];
-//        $validate = new IDMustBeInpostiveInt();
-//        $result = $validate->batch()->check($data);
-//
-//        if ($result){
-//            return '校验成功';
-//        }else{
-//
-//        }
         (new IDMustBeInpostiveInt())->goCheck();
-        $c = 1;
+
+        $banner = BannerModel::getBannerByID($id);
+
+        if (!$banner) {
+            throw  new BannerMissException();
+        }
+        return $banner;
+
+
     }
 }
