@@ -11,8 +11,6 @@ namespace app\api\controller\v1;
 use app\api\model\Banner as BannerModel;
 use app\api\validate\IDMustBeInpostiveInt;
 use app\lib\exception\BannerMissException;
-use think\Exception;
-use think\exception\ErrorException;
 
 class Banner
 {
