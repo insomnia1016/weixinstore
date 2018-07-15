@@ -9,20 +9,20 @@
 namespace app\api\model;
 
 
-use think\Exception;
-use think\exception\ErrorException;
-
-class Banner
+class Banner extends BaseModel
 {
-    public static function getBannerByID($id){
-        //TODO:根据Banner id号 获取Banner信息
-//        try{
-//            1 / 0 ;
-//        }catch (ErrorException $ex){
-//            throw $ex;
-//        }
-//        return 'this is banner info';
-        return null;
+    protected $hidden = ['delete_time','update_time'];
+
+    public function items()
+    {
+        return $this->hasMany('BannerItem', 'banner_id', 'id');
+    }
+
+    public static function getBannerByID($id)
+    {
+        $banner = self::with(['items','items.img'])->find($id);
+
+        return $banner;
     }
 
 }
