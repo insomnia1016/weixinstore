@@ -9,7 +9,7 @@
 namespace app\lib\exception;
 
 
-class WeChatException extends  BaseException
+class WeChatException extends BaseException
 {
 
     public $errorCode = 999;

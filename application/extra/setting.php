@@ -6,6 +6,7 @@
  * Time: 16:56
  */
 
-return[
-  'img_prefix' => 'http://y.cn/images'
+return [
+    'img_prefix' => 'http://y.cn/images',
+    'token_expire_in' => 7200
 ];

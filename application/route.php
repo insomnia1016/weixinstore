@@ -18,4 +18,4 @@ Route::get('api/:version/product/recent','api/:version.Product/getRecent');
 Route::get('api/:version/product/by_category','api/:version.Product/getAllinByCategoryID');
 
 Route::get('api/:version/category/all','api/:version.Category/getAllCategories');
-Route::get('api/:version/token/user','api/:version.Token/TokenGet');
+Route::post('api/:version/token/user','api/:version.Token/getToken');
