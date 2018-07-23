@@ -12,12 +12,35 @@ namespace app\api\controller\v1;
 use app\api\validate\AddressNew;
 use app\api\service\Token as TokenService;
 use app\api\model\User as UserModel;
+use app\lib\enum\ScopeEnum;
+use app\lib\exception\ForbiddenException;
 use app\lib\exception\SuccessMessage;
+use app\lib\exception\TokenException;
 use app\lib\exception\UserException;
+use think\Controller;
 
-class Address
+class Address extends Controller
 {
-    public function createOrUpdate(){
+    protected $beforeActionList = [
+        'checkPrimaryScope' => ['only' => 'createOrUpdate']
+    ];
+
+    public function checkPrimaryScope()
+    {
+        $scope = TokenService::getCurrentTokenVar('scope');
+        if ($scope) {
+            if ($scope >= ScopeEnum::User) {
+                return true;
+            } else {
+                throw new ForbiddenException();
+            }
+        } else {
+            throw new TokenException();
+        }
+    }
+
+    public function createOrUpdate()
+    {
 
         $validate = new AddressNew();
         $validate->goCheck();
@@ -29,19 +52,24 @@ class Address
 
         $uid = TokenService::getCurrentUid();
         $user = UserModel::get($uid);
-        if (!$user){
+        if (!$user) {
             throw  new UserException();
         }
 
-        $dataArray = $validate->getDataByRule(input('post.'));
+        $data = $validate->getDataByRule(input('post.'));
 
         $userAddress = $user->address;
-        if (!$userAddress){
-            $user->address()->save($userAddress);
-        }else{
-            $user->address->save($dataArray);
+        if (!$userAddress) {
+            // 关联属性不存在，则新建
+            $user->address()->save($data);
+        } else {
+            // 存在则更新
+            // 新增的save方法和更新的save方法并不一样
+            // 新增的save来自于关联关系
+            // 更新的save来自于模型
+            $user->address->save($data);
         }
-        return  json(New SuccessMessage(),201);
+        return json(New SuccessMessage(), 201);
 
     }
 
