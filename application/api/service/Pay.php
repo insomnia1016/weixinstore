@@ -15,6 +15,11 @@ use app\lib\exception\TokenException;
 use think\Exception;
 use app\api\service\Order as OrderService;
 use app\api\model\Order as OrderModel;
+use think\Loader;
+use think\Log;
+
+Loader::import('WxPay.WxPay',EXTEND_PATH,'.Api.php');
+
 class Pay
 {
     private $orderID;
@@ -39,11 +44,33 @@ class Pay
         if (!$status['pass']){
             return $status;
         }
-
+       return $this->makeWxPreOrder($status['orderPrice']);
     }
 
-    private function makeExPreOrder(){
-
+    private function makeWxPreOrder($totalPrice){
+        //openid
+        $openid = Token::getCurrentTokenVar('openid');
+        if (!$openid){
+            throw new TokenException();
+        }
+        $wxOrderData = new \WxPayUnifiedOrder();
+        $wxOrderData->SetOut_trade_no($this->orderNO);
+        $wxOrderData->SetTrade_type('JSAPI');
+        $wxOrderData->SetTotal_fee($totalPrice*100);
+        $wxOrderData->SetBody('零食商城');
+        $wxOrderData->SetOpenid($openid);
+        $wxOrderData->SetNotify_url(config('secure.pay_back_url'));
+        return $this->getPaySignature($wxOrderData);
+    }
+    //向微信请求订单号并生成签名
+    private function getPaySignature($wxOrderData){
+        $wxOrder = \WxPayApi::unifiedOrder($wxOrderData);
+        if ($wxOrder['return_code']!= 'SUCCESS' || $wxOrder['result_code']!= 'SUCCESS'){
+            Log::record($wxOrder,'error');
+            Log::record('获取预支付订单失败','error');
+        }
+        //TODO: 生成签名
+        return null;
     }
     private function checkOrderValid(){
         $order = OrderModel::where('id','=',$this->orderID)->find();
