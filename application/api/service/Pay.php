@@ -59,7 +59,7 @@ class Pay
         $wxOrderData->SetTotal_fee($totalPrice*100);
         $wxOrderData->SetBody('零食商城');
         $wxOrderData->SetOpenid($openid);
-        $wxOrderData->SetNotify_url(config('secure.pay_back_url'));
+        $wxOrderData->SetNotify_url('http://qq.com');
         return $this->getPaySignature($wxOrderData);
     }
     //向微信请求订单号并生成签名
@@ -69,8 +69,29 @@ class Pay
             Log::record($wxOrder,'error');
             Log::record('获取预支付订单失败','error');
         }
-        //TODO: 生成签名
-        return null;
+        $this->recordPreOrder($wxOrder);
+        $signature = $this->sign($wxOrder);
+        return $signature;
+    }
+    private function sign($wxOrder){
+        $jsApiPayData = new \WxPayJsApiPay();
+        $jsApiPayData->SetAppid(config('wx.app_id'));
+        $jsApiPayData->SetTimeStamp((string)time());
+        $rand = md5(time().mt_rand(0,1000));
+        $jsApiPayData->SetNonceStr($rand);
+        $jsApiPayData->SetPackage('prepay_id='.$wxOrder['prepay_id']);
+        $jsApiPayData->SetSignType('md5');
+
+        $sign = $jsApiPayData->MakeSign();
+        $rawValues = $jsApiPayData->GetValues();
+        $rawValues['paySign'] = $sign;
+        unset($rawValues['appId']);
+        return $rawValues;
+
+    }
+    private function recordPreOrder($wxOrder){
+        OrderModel::where('id','=',$this->orderID)
+            ->update(['prepay_id'=>$wxOrder['prepay_id']]);
     }
     private function checkOrderValid(){
         $order = OrderModel::where('id','=',$this->orderID)->find();
