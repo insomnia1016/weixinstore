@@ -12,6 +12,10 @@ namespace app\api\controller\v1;
 use app\api\controller\BaseController;
 use app\api\validate\OrderPlace;
 use app\api\service\Token as TokenService;
+use app\api\validate\PagingParameter;
+use app\api\service\Token;
+use app\api\model\Order as OrderModel;
+
 
 class Order extends BaseController
 {
@@ -30,14 +34,34 @@ class Order extends BaseController
     //成功：也需要进行库存量的检查
     //成功：进行库存量的扣除，失败：放久一个支付失败的结果
 
-    public  function  placeOrder(){
+    public function placeOrder()
+    {
         (new OrderPlace())->goCheck();
         $products = input('post.products/a');
         $uid = TokenService::getCurrentUid();
 
         $order = new \app\api\service\Order();
-        $status = $order->place($uid,$products);
+        $status = $order->place($uid, $products);
         return $status;
+    }
+
+    public function getSummaryByUser($page = 1, $size = 15)
+    {
+        (new PagingParameter())->goCheck();
+        $uid = Token::getCurrentUid();
+
+        $paginateOrders = OrderModel::getSummaryByUser($uid,$page,$size);
+
+        if ($paginateOrders->isEmpty()){
+            return [
+                'data' => [],
+                'current_page' => $paginateOrders::getCurrentPage()
+            ];
+        }
+        return [
+            'data' => $paginateOrders->toArray(),
+            'current_page' =>  $paginateOrders::getCurrentPage()
+        ];
     }
 
 }
