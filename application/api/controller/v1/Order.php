@@ -10,17 +10,20 @@ namespace app\api\controller\v1;
 
 
 use app\api\controller\BaseController;
+use app\api\validate\IDMustBeInpostiveInt;
 use app\api\validate\OrderPlace;
 use app\api\service\Token as TokenService;
 use app\api\validate\PagingParameter;
 use app\api\service\Token;
 use app\api\model\Order as OrderModel;
+use app\lib\exception\OrderException;
 
 
 class Order extends BaseController
 {
     protected $beforeActionList = [
-        'checkExclusiveScope' => ['only' => 'placeOrder']
+        'checkExclusiveScope' => ['only' => 'placeOrder'],
+        'checkPrimaryScope' => ['only' => 'getDetail,getSummaryByUser']
     ];
 
 
@@ -45,6 +48,15 @@ class Order extends BaseController
         return $status;
     }
 
+    public function getDetail($id){
+        (new IDMustBeInpostiveInt())->goCheck();
+        $order = OrderModel::get($id);
+        if (!$order){
+            throw new OrderException();
+        }
+        return $order->hidden(['prepay_id']);
+    }
+
     public function getSummaryByUser($page = 1, $size = 15)
     {
         (new PagingParameter())->goCheck();
@@ -59,7 +71,7 @@ class Order extends BaseController
             ];
         }
         return [
-            'data' => $paginateOrders->toArray(),
+            'data' => $paginateOrders->hidden(['prepay_id','snap_items','snap_address'])->toArray(),
             'current_page' =>  $paginateOrders::getCurrentPage()
         ];
     }
