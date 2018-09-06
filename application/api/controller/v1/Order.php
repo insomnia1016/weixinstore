@@ -57,7 +57,7 @@ class Order extends BaseController
         return $order->hidden(['prepay_id']);
     }
 
-    public function getSummaryByUser($page = 1, $size = 15)
+    public function getSummaryByUser($page = 1, $size = 10)
     {
         (new PagingParameter())->goCheck();
         $uid = Token::getCurrentUid();
