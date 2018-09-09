@@ -17,6 +17,8 @@ use app\api\validate\PagingParameter;
 use app\api\service\Token;
 use app\api\model\Order as OrderModel;
 use app\lib\exception\OrderException;
+use app\api\service\Order as OrderService;
+use app\lib\exception\SuccessMessage;
 
 
 class Order extends BaseController
@@ -43,7 +45,7 @@ class Order extends BaseController
         $products = input('post.products/a');
         $uid = TokenService::getCurrentUid();
 
-        $order = new \app\api\service\Order();
+        $order = new OrderService();
         $status = $order->place($uid, $products);
         return $status;
     }
@@ -75,5 +77,38 @@ class Order extends BaseController
             'current_page' =>  $paginateOrders::getCurrentPage()
         ];
     }
+
+    /**
+     * 获取全部订单简要信息（分页）
+     * @param int $page
+     * @param int $size
+     * @return array
+     * @throws \app\lib\exception\ParameterException
+     */
+    public function getSummary($page=1,$size=20){
+        (new PagingParameter())->goCheck();
+        $pageingOrders = OrderModel::getSummaryByPage($page,$size);
+        if ($pageingOrders->isEmpty()){
+            return [
+                'current_page' => $pageingOrders->currentPage(),
+                'data' => []
+            ];
+        }
+        $data = $pageingOrders->hidden(['snap_items','snap_address'])->toArray();
+        return [
+            'current_page' => $pageingOrders->currentPage(),
+            'data' => $data
+        ];
+    }
+
+    public function delivery($id){
+        (new IDMustBeInpostiveInt())->goCheck();
+        $order = new OrderService();
+        $success = $order->delivery($id);
+        if($success){
+            return new SuccessMessage();
+        }
+    }
+
 
 }
